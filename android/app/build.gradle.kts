@@ -7,7 +7,7 @@ plugins {
 }
 
 android {
-    namespace = "com.nanahui.nanahui_crm"
+    namespace = "com.nanaxe.nanaxe_crm"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 

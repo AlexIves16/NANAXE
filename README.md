@@ -1,4 +1,4 @@
-# 🚀 NANAHUI CRM
+# 🚀 NANAXE CRM
 
 CRM-ассистент для команд с AI-планированием, mind-картами и интеграцией с Google Calendar.
 
@@ -81,4 +81,4 @@ Internal use only
 
 ---
 
-**Создано для команды NANAHUI** 🚀
+**Создано для команды NANAXE** 🚀

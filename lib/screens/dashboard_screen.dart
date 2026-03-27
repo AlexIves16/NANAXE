@@ -8,7 +8,7 @@ class DashboardScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('NANAHUI CRM'),
+        title: const Text('NANAXE CRM'),
         actions: [
           IconButton(
             icon: const Icon(Icons.settings),

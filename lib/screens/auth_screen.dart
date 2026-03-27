@@ -25,7 +25,7 @@ class AuthScreen extends ConsumerWidget {
                 ),
                 const SizedBox(height: 32),
                 const Text(
-                  'NANAHUI CRM',
+                  'NANAXE CRM',
                   style: TextStyle(
                     fontSize: 32,
                     fontWeight: FontWeight.bold,

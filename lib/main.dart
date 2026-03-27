@@ -27,7 +27,7 @@ class NanahuiCrmApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp.router(
-      title: 'NANAHUI CRM',
+      title: 'NANAXE CRM',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
