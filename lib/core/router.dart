@@ -2,6 +2,7 @@ import 'package:go_router/go_router.dart';
 import '../screens/auth_screen.dart';
 import '../screens/home_screen.dart';
 import '../screens/tasks_screen.dart';
+import '../screens/task_form_screen.dart';
 import '../screens/mind_map_screen.dart';
 import '../screens/calendar_screen.dart';
 import '../screens/alarms_screen.dart';
@@ -25,6 +26,30 @@ class AppRouter {
             path: 'tasks',
             name: 'tasks',
             builder: (context, state) => const TasksScreen(),
+            routes: [
+              GoRoute(
+                path: 'new',
+                name: 'new-task',
+                builder: (context, state) {
+                  final args = state.extra as Map<String, dynamic>?;
+                  return TaskFormScreen(
+                    projectId: args?['projectId'] ?? 'default',
+                  );
+                },
+              ),
+              GoRoute(
+                path: ':taskId',
+                name: 'edit-task',
+                builder: (context, state) {
+                  final args = state.extra as Map<String, dynamic>?;
+                  final task = args?['task'];
+                  return TaskFormScreen(
+                    task: task,
+                    projectId: args?['projectId'] ?? 'default',
+                  );
+                },
+              ),
+            ],
           ),
           GoRoute(
             path: 'mindmap',
