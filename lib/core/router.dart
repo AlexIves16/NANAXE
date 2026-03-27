@@ -1,4 +1,5 @@
 import 'package:go_router/go_router.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../screens/auth_screen.dart';
 import '../screens/home_screen.dart';
 import '../screens/tasks_screen.dart';
@@ -7,10 +8,16 @@ import '../screens/mind_map_screen.dart';
 import '../screens/calendar_screen.dart';
 import '../screens/alarms_screen.dart';
 import '../screens/ai_test_screen.dart';
+import '../providers/auth_provider.dart';
+
+// Глобальный ключ для навигации
+final GlobalKey<NavigatorState> _rootNavigatorKey = GlobalKey<NavigatorState>();
 
 class AppRouter {
   static final GoRouter router = GoRouter(
+    navigatorKey: _rootNavigatorKey,
     initialLocation: '/auth',
+    refreshListenable: GoRouterRefreshNotifier(),
     routes: [
       GoRoute(
         path: '/auth',
@@ -74,5 +81,44 @@ class AppRouter {
         ],
       ),
     ],
+    redirect: (context, state) {
+      final isLoggedIn = GoRouterRefreshNotifier.isAuthenticated;
+      final isLoggingIn = state.matchedLocation == '/auth';
+
+      if (!isLoggedIn && !isLoggingIn) {
+        return '/auth';
+      }
+
+      if (isLoggedIn && isLoggingIn) {
+        return '/home';
+      }
+
+      return null;
+    },
   );
 }
+
+// Класс для уведомления об изменении состояния аутентификации
+class GoRouterRefreshNotifier extends ChangeNotifier {
+  static bool isAuthenticated = false;
+
+  GoRouterRefreshNotifier() {
+    // Подписка на изменения аутентификации будет добавлена через provider
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+  }
+}
+
+// Provider для обновления роутера при изменении аутентификации
+final routerRefreshProvider = ChangeNotifierProvider((ref) {
+  final auth = ref.watch(authProvider);
+
+  auth.whenData((user) {
+    GoRouterRefreshNotifier.isAuthenticated = user != null;
+  });
+
+  return GoRouterRefreshNotifier();
+});

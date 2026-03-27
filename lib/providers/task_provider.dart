@@ -6,45 +6,85 @@ import '../core/firestore_service.dart';
 import '../core/local_storage_service.dart';
 import '../core/deepseek_service.dart';
 
+// Provider для текущего пользователя (заглушка пока нет auth)
+final currentUserIdProvider = Provider<String?>((ref) {
+  // TODO: Заменить на реального пользователя из Firebase Auth
+  return null; // Пока нет авторизации
+});
+
 // Provider для списка всех задач
-final tasksProvider = StateNotifierProvider<TasksNotifier, AsyncValue<List<TaskModel>>>((ref) {
-  return TasksNotifier();
+final tasksProvider =
+    StateNotifierProvider<TasksNotifier, AsyncValue<List<TaskModel>>>((ref) {
+  return TasksNotifier(ref);
 });
 
 // Provider для задач конкретного проекта
-final tasksByProjectProvider = Provider.family<AsyncValue<List<TaskModel>>, String>((ref, projectId) {
+final tasksByProjectProvider =
+    Provider.family<AsyncValue<List<TaskModel>>, String>((ref, projectId) {
   final tasks = ref.watch(tasksProvider);
   return tasks.when(
-    data: (allTasks) => AsyncValue.data(allTasks.where((t) => t.projectId == projectId).toList()),
+    data: (allTasks) => AsyncValue.data(
+        allTasks.where((t) => t.projectId == projectId).toList()),
     loading: () => const AsyncValue.loading(),
     error: (e, st) => AsyncValue.error(e, st),
   );
 });
 
 // Provider для задач пользователя
-final tasksByUserProvider = Provider.family<AsyncValue<List<TaskModel>>, String>((ref, userId) {
+final tasksByUserProvider =
+    Provider.family<AsyncValue<List<TaskModel>>, String>((ref, userId) {
   final tasks = ref.watch(tasksProvider);
   return tasks.when(
-    data: (allTasks) => AsyncValue.data(allTasks.where((t) => t.assigneeId == userId).toList()),
+    data: (allTasks) =>
+        AsyncValue.data(allTasks.where((t) => t.assigneeId == userId).toList()),
     loading: () => const AsyncValue.loading(),
     error: (e, st) => AsyncValue.error(e, st),
   );
 });
 
+// Stream provider для задач в реальном времени
+final tasksStreamProvider =
+    StreamProvider.family<List<TaskModel>, String?>((ref, projectId) {
+  return firestoreService.watchTasks(projectId);
+});
+
 class TasksNotifier extends StateNotifier<AsyncValue<List<TaskModel>>> {
-  TasksNotifier() : super(const AsyncValue.loading()) {
+  final Ref ref;
+  StreamSubscription? _subscription;
+
+  TasksNotifier(this.ref) : super(const AsyncValue.loading()) {
     _loadTasks();
+  }
+
+  @override
+  void dispose() {
+    _subscription?.cancel();
+    super.dispose();
   }
 
   // Загрузка задач
   Future<void> _loadTasks() async {
     try {
-      // Сначала загружаем из локального хранилища
+      // Сначала загружаем из локального хранилища (офлайн режим)
       final localTasks = localStorageService.getTasks();
       state = AsyncValue.data(localTasks);
 
-      // Потом синхронизируем с Firestore
-      // TODO: Реализовать когда будет Firebase Auth
+      // Подписываемся на обновления из Firestore
+      final currentUserId = ref.read(currentUserIdProvider);
+
+      _subscription =
+          firestoreService.watchTasks(null).listen((remoteTasks) async {
+        // Сохраняем локально для офлайн режима
+        await localStorageService.syncWithRemote(remoteTasks);
+
+        // Обновляем состояние
+        state = AsyncValue.data(remoteTasks);
+      }, onError: (error, stackTrace) {
+        // Если ошибка Firestore, используем локальные данные
+        print('Firestore error: $error');
+        final localTasks = localStorageService.getTasks();
+        state = AsyncValue.data(localTasks);
+      });
     } catch (e, st) {
       state = AsyncValue.error(e, st);
     }
@@ -59,8 +99,11 @@ class TasksNotifier extends StateNotifier<AsyncValue<List<TaskModel>>> {
     TaskPriority priority = TaskPriority.medium,
     DateTime? dueDate,
     int estimatedHours = 0,
+    String? assigneeId,
   }) async {
     try {
+      final currentUserId = ref.read(currentUserIdProvider);
+
       final task = TaskModel(
         id: const Uuid().v4(),
         title: title,
@@ -70,19 +113,25 @@ class TasksNotifier extends StateNotifier<AsyncValue<List<TaskModel>>> {
         priority: priority,
         dueDate: dueDate,
         estimatedHours: estimatedHours,
+        assigneeId: assigneeId ?? currentUserId,
+        creatorId: currentUserId,
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),
       );
 
-      // Сохраняем локально
+      // Сохраняем локально (для офлайн режима)
       await localStorageService.saveTask(task);
-      
+
+      // Сохраняем в Firestore
+      try {
+        await firestoreService.createTask(task);
+      } catch (e) {
+        print('Firestore save failed, saved locally only: $e');
+      }
+
       // Обновляем состояние
       final currentTasks = state.value ?? [];
       state = AsyncValue.data([...currentTasks, task]);
-
-      // TODO: Сохранить в Firestore когда будет авторизация
-      // await firestoreService.createTask(task);
 
       return task;
     } catch (e, st) {
@@ -92,18 +141,20 @@ class TasksNotifier extends StateNotifier<AsyncValue<List<TaskModel>>> {
   }
 
   // Обновление задачи
-  Future<void> updateTask(String taskId, {
+  Future<void> updateTask(
+    String taskId, {
     String? title,
     String? description,
     TaskStatus? status,
     TaskPriority? priority,
     DateTime? dueDate,
     String? assigneeId,
+    Map<String, dynamic>? aiMetadata,
   }) async {
     try {
       final currentTasks = state.value ?? [];
       final taskIndex = currentTasks.indexWhere((t) => t.id == taskId);
-      
+
       if (taskIndex == -1) throw Exception('Task not found');
 
       final oldTask = currentTasks[taskIndex];
@@ -114,17 +165,23 @@ class TasksNotifier extends StateNotifier<AsyncValue<List<TaskModel>>> {
         priority: priority ?? oldTask.priority,
         dueDate: dueDate ?? oldTask.dueDate,
         assigneeId: assigneeId ?? oldTask.assigneeId,
+        aiMetadata: aiMetadata ?? oldTask.aiMetadata,
         updatedAt: DateTime.now(),
       );
 
       // Сохраняем локально
       await localStorageService.saveTask(updatedTask);
 
+      // Сохраняем в Firestore
+      try {
+        await firestoreService.updateTask(updatedTask);
+      } catch (e) {
+        print('Firestore update failed, saved locally only: $e');
+      }
+
       // Обновляем состояние
       currentTasks[taskIndex] = updatedTask;
       state = AsyncValue.data(List.from(currentTasks));
-
-      // TODO: Обновить в Firestore
     } catch (e, st) {
       state = AsyncValue.error(e, st);
       rethrow;
@@ -137,12 +194,17 @@ class TasksNotifier extends StateNotifier<AsyncValue<List<TaskModel>>> {
       // Удаляем локально
       await localStorageService.deleteTask(taskId);
 
+      // Удаляем из Firestore
+      try {
+        await firestoreService.deleteTask(taskId);
+      } catch (e) {
+        print('Firestore delete failed, deleted locally only: $e');
+      }
+
       // Обновляем состояние
       final currentTasks = state.value ?? [];
       currentTasks.removeWhere((t) => t.id == taskId);
       state = AsyncValue.data(List.from(currentTasks));
-
-      // TODO: Удалить из Firestore
     } catch (e, st) {
       state = AsyncValue.error(e, st);
       rethrow;
@@ -193,18 +255,46 @@ class TasksNotifier extends StateNotifier<AsyncValue<List<TaskModel>>> {
     );
   }
 
+  // AI: Генерация описания
+  Future<String> generateDescriptionWithAI({
+    required String title,
+    String? context,
+  }) async {
+    return await deepSeekService.generateTaskDescription(
+      title: title,
+      context: context,
+    );
+  }
+
   // Фильтрация задач по статусу
   List<TaskModel> filterByStatus(List<TaskModel> tasks, TaskStatus status) {
     return tasks.where((t) => t.status == status).toList();
   }
 
   // Фильтрация задач по приоритету
-  List<TaskModel> filterByPriority(List<TaskModel> tasks, TaskPriority priority) {
+  List<TaskModel> filterByPriority(
+      List<TaskModel> tasks, TaskPriority priority) {
     return tasks.where((t) => t.priority == priority).toList();
   }
 
   // Просроченные задачи
   List<TaskModel> getOverdueTasks(List<TaskModel> tasks) {
     return tasks.where((t) => t.isOverdue).toList();
+  }
+
+  // Завершение задачи
+  Future<void> completeTask(String taskId) async {
+    await updateTask(
+      taskId,
+      status: TaskStatus.done,
+    );
+  }
+
+  // Возобновление задачи
+  Future<void> reopenTask(String taskId) async {
+    await updateTask(
+      taskId,
+      status: TaskStatus.todo,
+    );
   }
 }

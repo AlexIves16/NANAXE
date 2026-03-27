@@ -23,6 +23,12 @@ class FirestoreService {
     await _db.collection('users').doc(user.id).update(user.toFirestore());
   }
 
+  Stream<UserModel?> watchUser(String userId) {
+    return _db.collection('users').doc(userId).snapshots().map((doc) {
+      return doc.exists ? UserModel.fromFirestore(doc) : null;
+    });
+  }
+
   // === PROJECTS ===
   Future<void> createProject(ProjectModel project) async {
     await _db.collection('projects').doc(project.id).set(project.toFirestore());
@@ -34,7 +40,7 @@ class FirestoreService {
         .where('teamId', isEqualTo: teamId)
         .orderBy('createdAt', descending: true)
         .get();
-    
+
     return snapshot.docs.map((doc) => ProjectModel.fromFirestore(doc)).toList();
   }
 
@@ -43,8 +49,18 @@ class FirestoreService {
         .collection('projects')
         .where('memberIds', arrayContains: userId)
         .get();
-    
+
     return snapshot.docs.map((doc) => ProjectModel.fromFirestore(doc)).toList();
+  }
+
+  Stream<List<ProjectModel>> watchProjectsByUser(String userId) {
+    return _db
+        .collection('projects')
+        .where('memberIds', arrayContains: userId)
+        .snapshots()
+        .map((snapshot) => snapshot.docs
+            .map((doc) => ProjectModel.fromFirestore(doc))
+            .toList());
   }
 
   // === TASKS ===
@@ -58,7 +74,7 @@ class FirestoreService {
         .where('projectId', isEqualTo: projectId)
         .orderBy('createdAt', descending: true)
         .get();
-    
+
     return snapshot.docs.map((doc) => TaskModel.fromFirestore(doc)).toList();
   }
 
@@ -66,9 +82,17 @@ class FirestoreService {
     final snapshot = await _db
         .collection('tasks')
         .where('assigneeId', isEqualTo: assigneeId)
-        .where('status', whereIn: ['todo', 'inProgress', 'review'])
+        .where('status', whereIn: ['todo', 'inProgress', 'review']).get();
+
+    return snapshot.docs.map((doc) => TaskModel.fromFirestore(doc)).toList();
+  }
+
+  Future<List<TaskModel>> getAllTasks() async {
+    final snapshot = await _db
+        .collection('tasks')
+        .orderBy('createdAt', descending: true)
         .get();
-    
+
     return snapshot.docs.map((doc) => TaskModel.fromFirestore(doc)).toList();
   }
 
@@ -86,13 +110,31 @@ class FirestoreService {
         .collection('tasks')
         .where('projectId', isEqualTo: projectId)
         .get();
-    
+
     return snapshot.docs.map((doc) => TaskModel.fromFirestore(doc)).toList();
+  }
+
+  // Поток задач для реального времени
+  Stream<List<TaskModel>> watchTasks(String? projectId) {
+    Query query = _db.collection('tasks');
+
+    if (projectId != null && projectId.isNotEmpty) {
+      query = query.where('projectId', isEqualTo: projectId);
+    }
+
+    return query.orderBy('createdAt', descending: true).snapshots().map(
+        (snapshot) =>
+            snapshot.docs.map((doc) => TaskModel.fromFirestore(doc)).toList());
   }
 
   // === MIND MAPS ===
   Future<void> createMindMapNode(MindMapNode node) async {
-    await _db.collection('mindmaps').doc(node.projectId).collection('nodes').doc(node.id).set(node.toFirestore());
+    await _db
+        .collection('mindmaps')
+        .doc(node.projectId)
+        .collection('nodes')
+        .doc(node.id)
+        .set(node.toFirestore());
   }
 
   Future<List<MindMapNode>> getMindMapNodes(String projectId) async {
@@ -102,7 +144,7 @@ class FirestoreService {
         .collection('nodes')
         .orderBy('level')
         .get();
-    
+
     return snapshot.docs.map((doc) => MindMapNode.fromFirestore(doc)).toList();
   }
 
@@ -113,6 +155,15 @@ class FirestoreService {
         .collection('nodes')
         .doc(node.id)
         .update(node.toFirestore());
+  }
+
+  Future<void> deleteMindMapNode(String projectId, String nodeId) async {
+    await _db
+        .collection('mindmaps')
+        .doc(projectId)
+        .collection('nodes')
+        .doc(nodeId)
+        .delete();
   }
 
   // === CALENDAR EVENTS ===
@@ -129,13 +180,15 @@ class FirestoreService {
         .collection('events')
         .where('startTime', isLessThanOrEqualTo: Timestamp.fromDate(end))
         .where('endTime', isGreaterThanOrEqualTo: Timestamp.fromDate(start));
-    
+
     if (userId != null) {
       query = query.where('attendeeIds', arrayContains: userId);
     }
-    
+
     final snapshot = await query.get();
-    return snapshot.docs.map((doc) => CalendarEventModel.fromFirestore(doc)).toList();
+    return snapshot.docs
+        .map((doc) => CalendarEventModel.fromFirestore(doc))
+        .toList();
   }
 
   Future<void> updateEvent(CalendarEventModel event) async {
@@ -144,6 +197,17 @@ class FirestoreService {
 
   Future<void> deleteEvent(String eventId) async {
     await _db.collection('events').doc(eventId).delete();
+  }
+
+  Stream<List<CalendarEventModel>> watchEvents(String userId) {
+    return _db
+        .collection('events')
+        .where('attendeeIds', arrayContains: userId)
+        .orderBy('startTime')
+        .snapshots()
+        .map((snapshot) => snapshot.docs
+            .map((doc) => CalendarEventModel.fromFirestore(doc))
+            .toList());
   }
 
   // === ALARMS ===
@@ -157,7 +221,7 @@ class FirestoreService {
         .where('isEnabled', isEqualTo: true)
         .orderBy('dateTime')
         .get();
-    
+
     return snapshot.docs.map((doc) => AlarmModel.fromFirestore(doc)).toList();
   }
 
@@ -172,29 +236,45 @@ class FirestoreService {
   // === BATCH OPERATIONS ===
   Future<void> syncTasks(List<TaskModel> tasks) async {
     final batch = _db.batch();
-    
+
     for (final task in tasks) {
       batch.set(_db.collection('tasks').doc(task.id), task.toFirestore());
     }
-    
+
     await batch.commit();
   }
 
-  // === STREAMS (для реального времени) ===
-  Stream<List<TaskModel>> watchTasks(String projectId) {
-    return _db
-        .collection('tasks')
-        .where('projectId', isEqualTo: projectId)
-        .snapshots()
-        .map((snapshot) => snapshot.docs.map((doc) => TaskModel.fromFirestore(doc)).toList());
+  // === TEAMS ===
+  Future<void> createTeam(String teamId, String name, String ownerId) async {
+    await _db.collection('teams').doc(teamId).set({
+      'name': name,
+      'ownerId': ownerId,
+      'memberIds': [ownerId],
+      'createdAt': Timestamp.now(),
+      'updatedAt': Timestamp.now(),
+    });
   }
 
-  Stream<List<CalendarEventModel>> watchEvents(String userId) {
-    return _db
-        .collection('events')
-        .where('attendeeIds', arrayContains: userId)
-        .snapshots()
-        .map((snapshot) => snapshot.docs.map((doc) => CalendarEventModel.fromFirestore(doc)).toList());
+  Future<void> addTeamMember(String teamId, String userId) async {
+    await _db.collection('teams').doc(teamId).update({
+      'memberIds': FieldValue.arrayUnion([userId]),
+      'updatedAt': Timestamp.now(),
+    });
+  }
+
+  Future<void> removeTeamMember(String teamId, String userId) async {
+    await _db.collection('teams').doc(teamId).update({
+      'memberIds': FieldValue.arrayRemove([userId]),
+      'updatedAt': Timestamp.now(),
+    });
+  }
+
+  Stream<List<Map<String, dynamic>>> watchTeamMembers(String teamId) {
+    return _db.collection('teams').doc(teamId).snapshots().map((doc) {
+      if (!doc.exists) return [];
+      final data = doc.data() as Map<String, dynamic>;
+      return List<Map<String, dynamic>>.from(data['memberIds'] ?? []);
+    });
   }
 }
 

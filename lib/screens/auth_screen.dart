@@ -9,6 +9,7 @@ class AuthScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final authState = ref.watch(authProvider);
+    final authNotifier = ref.read(authProvider.notifier);
 
     return Scaffold(
       body: SafeArea(
@@ -43,6 +44,7 @@ class AuthScreen extends ConsumerWidget {
                 authState.when(
                   data: (user) {
                     if (user != null) {
+                      // Пользователь авторизован - переходим на главную
                       WidgetsBinding.instance.addPostFrameCallback((_) {
                         context.go('/home');
                       });
@@ -57,9 +59,11 @@ class AuthScreen extends ConsumerWidget {
                 ),
                 const SizedBox(height: 24),
                 ElevatedButton.icon(
-                  onPressed: () {
-                    ref.read(authProvider.notifier).signInWithGoogle();
-                  },
+                  onPressed: authNotifier.isLoggedIn
+                      ? null
+                      : () {
+                          authNotifier.signInWithGoogle();
+                        },
                   icon: const Icon(Icons.login),
                   label: const Text('Войти через Google'),
                   style: ElevatedButton.styleFrom(
@@ -69,6 +73,14 @@ class AuthScreen extends ConsumerWidget {
                     ),
                   ),
                 ),
+                if (authNotifier.isLoggedIn) ...[
+                  const SizedBox(height: 16),
+                  OutlinedButton.icon(
+                    onPressed: () => authNotifier.signOut(),
+                    icon: const Icon(Icons.logout),
+                    label: const Text('Выйти'),
+                  ),
+                ],
               ],
             ),
           ),
