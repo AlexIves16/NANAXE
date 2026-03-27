@@ -1,4 +1,4 @@
-package com.nanahui.nanahui_crm
+package com.nanaxe.nanaxe_crm
 
 import io.flutter.embedding.android.FlutterActivity
 
