@@ -166,6 +166,27 @@ class FirestoreService {
         .delete();
   }
 
+  Stream<List<MindMapNode>> watchMindMapNodes(String projectId) {
+    return _db
+        .collection('mindmaps')
+        .doc(projectId)
+        .collection('nodes')
+        .orderBy('level')
+        .snapshots()
+        .map((snapshot) => snapshot.docs
+            .map((doc) => MindMapNode.fromFirestore(doc))
+            .toList());
+  }
+
+  Future<void> deleteMindMapNode(String projectId, String nodeId) async {
+    await _db
+        .collection('mindmaps')
+        .doc(projectId)
+        .collection('nodes')
+        .doc(nodeId)
+        .delete();
+  }
+
   // === CALENDAR EVENTS ===
   Future<void> createEvent(CalendarEventModel event) async {
     await _db.collection('events').doc(event.id).set(event.toFirestore());
