@@ -30,6 +30,7 @@ dependencies:
   # Google Calendar
   googleapis: ^13.2.0
   googleapis_auth: ^1.6.0
+  table_calendar: ^3.0.9
 
   # AI Services
   http: ^1.2.0
