@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "118397847313",
+    "project_id": "nanax26-1f33b",
+    "storage_bucket": "nanax26-1f33b.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:118397847313:android:b1a3443f7a49c42d456eb0",
+        "android_client_info": {
+          "package_name": "com.nanaxe.nanaxe_crm"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "118397847313-jsce6bovvssvpvklaucfbaidk5bs342f.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA55gXLm9JAzhGEUThgsEmfhZaxUMVnlnM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "118397847313-jsce6bovvssvpvklaucfbaidk5bs342f.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

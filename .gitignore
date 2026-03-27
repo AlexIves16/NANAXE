@@ -3,9 +3,13 @@
 .env.local
 .env.*.local
 
-# Firebase
-google-services.json
-GoogleService-Info.plist
+# Firebase (root level)
+/google-services.json
+/GoogleService-Info.plist
+
+# Firebase (Android - tracked)
+!android/app/google-services.json
+!android/app/GoogleService-Info.plist
 
 # IDE
 .vscode/
