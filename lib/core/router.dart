@@ -8,6 +8,9 @@ import '../screens/mind_map_screen.dart';
 import '../screens/calendar_screen.dart';
 import '../screens/alarms_screen.dart';
 import '../screens/ai_test_screen.dart';
+import '../screens/admin/admin_screen.dart';
+import '../screens/admin/team_management_screen.dart';
+import '../screens/admin/projects_management_screen.dart';
 import '../providers/auth_provider.dart';
 
 // Глобальный ключ для навигации
@@ -77,6 +80,23 @@ class AppRouter {
             path: 'ai-test',
             name: 'ai-test',
             builder: (context, state) => const AiTestScreen(),
+          ),
+          GoRoute(
+            path: 'admin',
+            name: 'admin',
+            builder: (context, state) => const AdminScreen(),
+            routes: [
+              GoRoute(
+                path: 'team',
+                name: 'admin-team',
+                builder: (context, state) => const TeamManagementScreen(),
+              ),
+              GoRoute(
+                path: 'projects',
+                name: 'admin-projects',
+                builder: (context, state) => const ProjectsManagementScreen(),
+              ),
+            ],
           ),
         ],
       ),

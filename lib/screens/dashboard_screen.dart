@@ -11,6 +11,11 @@ class DashboardScreen extends StatelessWidget {
         title: const Text('NANAXE CRM'),
         actions: [
           IconButton(
+            icon: const Icon(Icons.admin_panel_settings),
+            onPressed: () => context.push('/home/admin'),
+            tooltip: 'Админка',
+          ),
+          IconButton(
             icon: const Icon(Icons.auto_awesome),
             onPressed: () => context.push('/home/ai-test'),
             tooltip: 'AI Тест',
