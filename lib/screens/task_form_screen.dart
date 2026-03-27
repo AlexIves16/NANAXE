@@ -22,7 +22,7 @@ class _TaskFormScreenState extends ConsumerState<TaskFormScreen> {
   final _formKey = GlobalKey<FormState>();
   final _titleController = TextEditingController();
   final _descriptionController = TextEditingController();
-  
+
   TaskPriority _priority = TaskPriority.medium;
   DateTime? _dueDate;
   int _estimatedHours = 0;
@@ -54,7 +54,7 @@ class _TaskFormScreenState extends ConsumerState<TaskFormScreen> {
       firstDate: DateTime.now(),
       lastDate: DateTime.now().add(const Duration(days: 365)),
     );
-    
+
     if (picked != null) {
       setState(() {
         _dueDate = picked;
@@ -76,11 +76,11 @@ class _TaskFormScreenState extends ConsumerState<TaskFormScreen> {
 
     try {
       await ref.read(tasksProvider.notifier).generateSubtasksWithAI(
-        title: _titleController.text,
-        description: _descriptionController.text,
-        projectId: widget.projectId,
-        parentTaskId: widget.task?.id,
-      );
+            title: _titleController.text,
+            description: _descriptionController.text,
+            projectId: widget.projectId,
+            parentTaskId: widget.task?.id,
+          );
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -120,11 +120,12 @@ class _TaskFormScreenState extends ConsumerState<TaskFormScreen> {
     });
 
     try {
-      final priority = await ref.read(tasksProvider.notifier).prioritizeTaskWithAI(
-        title: _titleController.text,
-        description: _descriptionController.text,
-        dueDate: _dueDate,
-      );
+      final priority =
+          await ref.read(tasksProvider.notifier).prioritizeTaskWithAI(
+                title: _titleController.text,
+                description: _descriptionController.text,
+                dueDate: _dueDate,
+              );
 
       setState(() {
         _priority = priority;
@@ -161,22 +162,22 @@ class _TaskFormScreenState extends ConsumerState<TaskFormScreen> {
       if (widget.task != null) {
         // Редактирование
         await ref.read(tasksProvider.notifier).updateTask(
-          widget.task!.id,
-          title: _titleController.text,
-          description: _descriptionController.text,
-          priority: _priority,
-          dueDate: _dueDate,
-        );
+              widget.task!.id,
+              title: _titleController.text,
+              description: _descriptionController.text,
+              priority: _priority,
+              dueDate: _dueDate,
+            );
       } else {
         // Создание
         await ref.read(tasksProvider.notifier).createTask(
-          title: _titleController.text,
-          description: _descriptionController.text,
-          projectId: widget.projectId,
-          priority: _priority,
-          dueDate: _dueDate,
-          estimatedHours: _estimatedHours,
-        );
+              title: _titleController.text,
+              description: _descriptionController.text,
+              projectId: widget.projectId,
+              priority: _priority,
+              dueDate: _dueDate,
+              estimatedHours: _estimatedHours,
+            );
       }
 
       if (mounted) {
@@ -297,7 +298,7 @@ class _TaskFormScreenState extends ConsumerState<TaskFormScreen> {
             ListTile(
               leading: const Icon(Icons.calendar_today),
               title: const Text('Дедлайн'),
-              subtitle: Text(_dueDate != null 
+              subtitle: Text(_dueDate != null
                   ? '📅 ${_dueDate!.day}.${_dueDate!.month}.${_dueDate!.year}'
                   : 'Не выбран'),
               trailing: const Icon(Icons.chevron_right),
@@ -366,7 +367,7 @@ class _TaskFormScreenState extends ConsumerState<TaskFormScreen> {
   Widget _getPriorityIcon(TaskPriority priority) {
     switch (priority) {
       case TaskPriority.urgent:
-        return const Icon(Icons.fire_engine, color: Colors.red);
+        return const Icon(Icons.local_fire_department, color: Colors.red);
       case TaskPriority.high:
         return const Icon(Icons.arrow_upward, color: Colors.orange);
       case TaskPriority.medium:

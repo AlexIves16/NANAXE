@@ -1,13 +1,15 @@
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest.dart' as tz;
+import 'package:flutter/material.dart';
 
 class NotificationService {
   static final NotificationService _instance = NotificationService._internal();
   factory NotificationService() => _instance;
   NotificationService._internal();
 
-  final FlutterLocalNotificationsPlugin _notifications = FlutterLocalNotificationsPlugin();
+  final FlutterLocalNotificationsPlugin _notifications =
+      FlutterLocalNotificationsPlugin();
   bool _isInitialized = false;
 
   // Инициализация
@@ -18,7 +20,8 @@ class NotificationService {
     tz.initializeTimeZones();
 
     // Настройки для Android
-    const androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
+    const androidSettings =
+        AndroidInitializationSettings('@mipmap/ic_launcher');
 
     // Настройки для iOS
     const iosSettings = DarwinInitializationSettings(
@@ -35,7 +38,8 @@ class NotificationService {
     await _notifications.initialize(
       settings,
       onDidReceiveNotificationResponse: _onNotificationTapped,
-      onDidReceiveBackgroundNotificationResponse: _onBackgroundNotificationTapped,
+      onDidReceiveBackgroundNotificationResponse:
+          _onBackgroundNotificationTapped,
     );
 
     // Запрашиваем разрешения
@@ -47,17 +51,17 @@ class NotificationService {
   // Запрос разрешений
   Future<void> _requestPermissions() async {
     // Android 13+ требует запрос разрешений
-    final androidPlugin = _notifications
-        .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
-    
+    final androidPlugin = _notifications.resolvePlatformSpecificImplementation<
+        AndroidFlutterLocalNotificationsPlugin>();
+
     if (androidPlugin != null) {
       await androidPlugin.requestNotificationsPermission();
     }
 
     // iOS
-    final iosPlugin = _notifications
-        .resolvePlatformSpecificImplementation<IOSFlutterLocalNotificationsPlugin>();
-    
+    final iosPlugin = _notifications.resolvePlatformSpecificImplementation<
+        IOSFlutterLocalNotificationsPlugin>();
+
     if (iosPlugin != null) {
       await iosPlugin.requestPermissions(
         alert: true,
@@ -91,7 +95,8 @@ class NotificationService {
     );
 
     await _notifications
-        .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
+        .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin>()
         ?.createNotificationChannel(channel);
   }
 
@@ -107,7 +112,8 @@ class NotificationService {
     );
 
     await _notifications
-        .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
+        .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin>()
         ?.createNotificationChannel(channel);
   }
 
@@ -212,7 +218,7 @@ class NotificationService {
     String? taskId,
   }) async {
     final hoursUntilDeadline = deadline.difference(DateTime.now()).inHours;
-    
+
     String title;
     String body;
 
@@ -221,10 +227,12 @@ class NotificationService {
       body = 'Задача "$taskTitle" должна быть выполнена прямо сейчас!';
     } else if (hoursUntilDeadline <= 1) {
       title = '🟠 Срочно! Дедлайн через час';
-      body = 'Задача "$taskTitle" должна быть выполнена через $hoursUntilDeadline ч';
+      body =
+          'Задача "$taskTitle" должна быть выполнена через $hoursUntilDeadline ч';
     } else if (hoursUntilDeadline <= 24) {
       title = '🟡 Напоминание о дедлайне';
-      body = 'Задача "$taskTitle" должна быть выполнена через $hoursUntilDeadline ч';
+      body =
+          'Задача "$taskTitle" должна быть выполнена через $hoursUntilDeadline ч';
     } else {
       final days = hoursUntilDeadline ~/ 24;
       title = '🔵 Скоро дедлайн';
@@ -308,7 +316,7 @@ class NotificationService {
     required int id,
     required String title,
     required String body,
-    required Time scheduledTime,
+    required TimeOfDay scheduledTime,
     String? payload,
   }) async {
     if (!_isInitialized) await initialize();
@@ -343,7 +351,7 @@ class NotificationService {
     );
   }
 
-  tz.TZDateTime _nextInstanceOfTime(Time scheduledTime) {
+  tz.TZDateTime _nextInstanceOfTime(TimeOfDay scheduledTime) {
     final now = tz.TZDateTime.now(tz.local);
     var scheduled = tz.TZDateTime(
       tz.local,

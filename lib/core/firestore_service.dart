@@ -178,15 +178,6 @@ class FirestoreService {
             .toList());
   }
 
-  Future<void> deleteMindMapNode(String projectId, String nodeId) async {
-    await _db
-        .collection('mindmaps')
-        .doc(projectId)
-        .collection('nodes')
-        .doc(nodeId)
-        .delete();
-  }
-
   // === CALENDAR EVENTS ===
   Future<void> createEvent(CalendarEventModel event) async {
     await _db.collection('events').doc(event.id).set(event.toFirestore());

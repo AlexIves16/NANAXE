@@ -1,4 +1,5 @@
 import 'package:go_router/go_router.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../screens/auth_screen.dart';
 import '../screens/home_screen.dart';
@@ -131,11 +132,6 @@ class GoRouterRefreshNotifier extends ChangeNotifier {
 
   GoRouterRefreshNotifier() {
     // Подписка на изменения аутентификации будет добавлена через provider
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
   }
 }
 

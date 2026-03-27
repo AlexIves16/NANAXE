@@ -1,20 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../core/notification_service.dart';
+import '../../core/notification_service.dart';
 
 class NotificationsSettingsScreen extends ConsumerStatefulWidget {
   const NotificationsSettingsScreen({super.key});
 
   @override
-  ConsumerState<NotificationsSettingsScreen> createState() => _NotificationsSettingsScreenState();
+  ConsumerState<NotificationsSettingsScreen> createState() =>
+      _NotificationsSettingsScreenState();
 }
 
-class _NotificationsSettingsScreenState extends ConsumerState<NotificationsSettingsScreen> {
+class _NotificationsSettingsScreenState
+    extends ConsumerState<NotificationsSettingsScreen> {
   bool _taskNotifications = true;
   bool _deadlineReminders = true;
   bool _taskAssigned = true;
   bool _dailySummary = false;
-  Time _dailySummaryTime = const Time(9, 0);
+  TimeOfDay _dailySummaryTime = const TimeOfDay(hour: 9, minute: 0);
 
   @override
   Widget build(BuildContext context) {
@@ -79,13 +81,14 @@ class _NotificationsSettingsScreenState extends ConsumerState<NotificationsSetti
           if (_dailySummary)
             ListTile(
               title: const Text('Время сводки'),
-              subtitle: Text('${_dailySummaryTime.hour.toString().padLeft(2, '0')}:${_dailySummaryTime.minute.toString().padLeft(2, '0')}'),
+              subtitle: Text(
+                  '${_dailySummaryTime.hour.toString().padLeft(2, '0')}:${_dailySummaryTime.minute.toString().padLeft(2, '0')}'),
               trailing: const Icon(Icons.access_time),
               onTap: () => _selectDailySummaryTime(),
             ),
           const Divider(),
           ListTile(
-            leading: const Icon(Icons.test_build, color: Colors.blue),
+            leading: const Icon(Icons.info_outline, color: Colors.blue),
             title: const Text('Тестовое уведомление'),
             subtitle: const Text('Проверьте работу уведомлений'),
             onTap: _showTestNotification,
@@ -115,7 +118,7 @@ class _NotificationsSettingsScreenState extends ConsumerState<NotificationsSetti
 
     if (picked != null) {
       setState(() {
-        _dailySummaryTime = Time(picked.hour, picked.minute);
+        _dailySummaryTime = picked;
       });
       _scheduleDailySummary();
     }

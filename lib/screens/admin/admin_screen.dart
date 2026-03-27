@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../providers/auth_provider.dart';
-import '../models/user_model.dart';
+import 'package:go_router/go_router.dart';
+import '../../providers/auth_provider.dart';
+import '../../models/user_model.dart';
 
 class AdminScreen extends ConsumerWidget {
   const AdminScreen({super.key});
@@ -116,9 +117,8 @@ class AdminScreen extends ConsumerWidget {
           children: [
             CircleAvatar(
               radius: 40,
-              backgroundImage: user?.photoUrl != null
-                  ? NetworkImage(user!.photoUrl!)
-                  : null,
+              backgroundImage:
+                  user?.photoUrl != null ? NetworkImage(user!.photoUrl!) : null,
               child: user?.photoUrl == null
                   ? const Icon(Icons.person, size: 40)
                   : null,
@@ -136,7 +136,8 @@ class AdminScreen extends ConsumerWidget {
             const SizedBox(height: 12),
             if (user?.isAdmin ?? false)
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                 decoration: BoxDecoration(
                   color: Colors.purple.withOpacity(0.2),
                   borderRadius: BorderRadius.circular(12),
@@ -149,7 +150,8 @@ class AdminScreen extends ConsumerWidget {
                     const SizedBox(width: 4),
                     const Text(
                       'Администратор',
-                      style: TextStyle(color: Colors.purple, fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                          color: Colors.purple, fontWeight: FontWeight.bold),
                     ),
                   ],
                 ),

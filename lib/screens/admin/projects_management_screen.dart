@@ -1,18 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:uuid/uuid.dart';
-import '../providers/auth_provider.dart';
-import '../models/project_model.dart';
+import '../../providers/auth_provider.dart';
+import '../../models/project_model.dart';
 
 class ProjectsManagementScreen extends ConsumerStatefulWidget {
   const ProjectsManagementScreen({super.key});
 
   @override
-  ConsumerState<ProjectsManagementScreen> createState() => _ProjectsManagementScreenState();
+  ConsumerState<ProjectsManagementScreen> createState() =>
+      _ProjectsManagementScreenState();
 }
 
-class _ProjectsManagementScreenState extends ConsumerState<ProjectsManagementScreen> {
+class _ProjectsManagementScreenState
+    extends ConsumerState<ProjectsManagementScreen> {
   final _nameController = TextEditingController();
   final _descriptionController = TextEditingController();
   bool _isCreating = false;
@@ -87,14 +90,24 @@ class _ProjectsManagementScreenState extends ConsumerState<ProjectsManagementScr
   }
 
   String _getRandomColor() {
-    final colors = ['#2196F3', '#4CAF50', '#FF9800', '#E91E63', '#9C27B0', '#00BCD4'];
+    final colors = [
+      '#2196F3',
+      '#4CAF50',
+      '#FF9800',
+      '#E91E63',
+      '#9C27B0',
+      '#00BCD4'
+    ];
     return colors[DateTime.now().millisecond % colors.length];
   }
 
   Future<void> _deleteProject(String projectId) async {
     try {
-      await FirebaseFirestore.instance.collection('projects').doc(projectId).delete();
-      
+      await FirebaseFirestore.instance
+          .collection('projects')
+          .doc(projectId)
+          .delete();
+
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('✅ Проект удалён')),
       );
@@ -195,7 +208,8 @@ class _ProjectsManagementScreenState extends ConsumerState<ProjectsManagementScr
                     child: Center(
                       child: Column(
                         children: [
-                          const Icon(Icons.folder_outline, size: 48, color: Colors.grey),
+                          const Icon(Icons.folder_outline,
+                              size: 48, color: Colors.grey),
                           const SizedBox(height: 16),
                           const Text(
                             'Нет проектов',
@@ -212,9 +226,11 @@ class _ProjectsManagementScreenState extends ConsumerState<ProjectsManagementScr
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
                 itemCount: projects.length,
-                separatorBuilder: (context, index) => const SizedBox(height: 12),
+                separatorBuilder: (context, index) =>
+                    const SizedBox(height: 12),
                 itemBuilder: (context, index) {
-                  final projectData = projects[index].data() as Map<String, dynamic>;
+                  final projectData =
+                      projects[index].data() as Map<String, dynamic>;
                   final projectId = projects[index].id;
                   final project = ProjectModel.fromFirestore(projects[index]);
 

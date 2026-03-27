@@ -297,7 +297,7 @@ class _TaskCard extends ConsumerWidget {
   IconData _getPriorityIcon(TaskPriority priority) {
     switch (priority) {
       case TaskPriority.urgent:
-        return Icons.fire_engine;
+        return Icons.local_fire_department;
       case TaskPriority.high:
         return Icons.arrow_upward;
       case TaskPriority.medium:

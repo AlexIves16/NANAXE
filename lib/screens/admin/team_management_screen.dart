@@ -1,14 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../providers/auth_provider.dart';
-import '../models/user_model.dart';
+import '../../providers/auth_provider.dart';
+import '../../models/user_model.dart';
 
 class TeamManagementScreen extends ConsumerStatefulWidget {
   const TeamManagementScreen({super.key});
 
   @override
-  ConsumerState<TeamManagementScreen> createState() => _TeamManagementScreenState();
+  ConsumerState<TeamManagementScreen> createState() =>
+      _TeamManagementScreenState();
 }
 
 class _TeamManagementScreenState extends ConsumerState<TeamManagementScreen> {
@@ -80,7 +82,8 @@ class _TeamManagementScreenState extends ConsumerState<TeamManagementScreen> {
     }
   }
 
-  Future<void> _changeUserRole(String userId, String teamId, UserRole newRole) async {
+  Future<void> _changeUserRole(
+      String userId, String teamId, UserRole newRole) async {
     try {
       await FirebaseFirestore.instance
           .collection('teams')
@@ -101,10 +104,7 @@ class _TeamManagementScreenState extends ConsumerState<TeamManagementScreen> {
 
   Future<void> _removeMember(String userId, String teamId) async {
     try {
-      await FirebaseFirestore.instance
-          .collection('teams')
-          .doc(teamId)
-          .update({
+      await FirebaseFirestore.instance.collection('teams').doc(teamId).update({
         'memberIds': FieldValue.arrayRemove([userId]),
       });
 
@@ -200,7 +200,8 @@ class _TeamManagementScreenState extends ConsumerState<TeamManagementScreen> {
                     child: Center(
                       child: Column(
                         children: [
-                          const Icon(Icons.people_outline, size: 48, color: Colors.grey),
+                          const Icon(Icons.people_outline,
+                              size: 48, color: Colors.grey),
                           const SizedBox(height: 16),
                           const Text(
                             'Нет команд',
@@ -217,7 +218,8 @@ class _TeamManagementScreenState extends ConsumerState<TeamManagementScreen> {
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
                 itemCount: teams.length,
-                separatorBuilder: (context, index) => const SizedBox(height: 12),
+                separatorBuilder: (context, index) =>
+                    const SizedBox(height: 12),
                 itemBuilder: (context, index) {
                   final team = teams[index].data() as Map<String, dynamic>;
                   final teamId = teams[index].id;
@@ -228,7 +230,8 @@ class _TeamManagementScreenState extends ConsumerState<TeamManagementScreen> {
                     name: team['name'] ?? 'Без названия',
                     memberCount: (team['memberIds'] as List?)?.length ?? 0,
                     isOwner: isOwner,
-                    onRemove: isOwner ? null : () => _removeMember(user!.id, teamId),
+                    onRemove:
+                        isOwner ? null : () => _removeMember(user!.id, teamId),
                   );
                 },
               );
@@ -279,9 +282,8 @@ class _TeamManagementScreenState extends ConsumerState<TeamManagementScreen> {
                   backgroundImage: user.photoUrl != null
                       ? NetworkImage(user.photoUrl!)
                       : null,
-                  child: user.photoUrl == null
-                      ? const Icon(Icons.person)
-                      : null,
+                  child:
+                      user.photoUrl == null ? const Icon(Icons.person) : null,
                 ),
                 title: Text(user.displayName ?? 'Без имени'),
                 subtitle: Text(user.email),
@@ -289,7 +291,8 @@ class _TeamManagementScreenState extends ConsumerState<TeamManagementScreen> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
                         color: user.isAdmin
                             ? Colors.purple.withOpacity(0.2)
