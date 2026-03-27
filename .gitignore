@@ -1,0 +1,48 @@
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Firebase
+google-services.json
+GoogleService-Info.plist
+
+# IDE
+.vscode/
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# Build
+build/
+**/build/
+**/android/build/
+**/ios/build/
+**/web/build/
+
+# Dependencies
+.pub-cache/
+.packages
+
+# Logs
+*.log
+logs/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Coverage
+coverage/
+
+# Testing
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub/
+
+# Temporary files
+*.tmp
+*.temp
