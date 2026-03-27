@@ -5,6 +5,7 @@ import '../screens/tasks_screen.dart';
 import '../screens/mind_map_screen.dart';
 import '../screens/calendar_screen.dart';
 import '../screens/alarms_screen.dart';
+import '../screens/ai_test_screen.dart';
 
 class AppRouter {
   static final GoRouter router = GoRouter(
@@ -39,6 +40,11 @@ class AppRouter {
             path: 'alarms',
             name: 'alarms',
             builder: (context, state) => const AlarmsScreen(),
+          ),
+          GoRoute(
+            path: 'ai-test',
+            name: 'ai-test',
+            builder: (context, state) => const AiTestScreen(),
           ),
         ],
       ),
