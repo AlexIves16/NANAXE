@@ -11,6 +11,7 @@ import '../screens/ai_test_screen.dart';
 import '../screens/admin/admin_screen.dart';
 import '../screens/admin/team_management_screen.dart';
 import '../screens/admin/projects_management_screen.dart';
+import '../screens/admin/notifications_settings_screen.dart';
 import '../providers/auth_provider.dart';
 
 // Глобальный ключ для навигации
@@ -95,6 +96,12 @@ class AppRouter {
                 path: 'projects',
                 name: 'admin-projects',
                 builder: (context, state) => const ProjectsManagementScreen(),
+              ),
+              GoRoute(
+                path: 'notifications',
+                name: 'admin-notifications',
+                builder: (context, state) =>
+                    const NotificationsSettingsScreen(),
               ),
             ],
           ),

@@ -5,6 +5,7 @@ import '../models/project_model.dart';
 import '../core/firestore_service.dart';
 import '../core/local_storage_service.dart';
 import '../core/deepseek_service.dart';
+import '../core/notification_service.dart';
 
 // Provider для текущего пользователя (заглушка пока нет auth)
 final currentUserIdProvider = Provider<String?>((ref) {
@@ -100,6 +101,7 @@ class TasksNotifier extends StateNotifier<AsyncValue<List<TaskModel>>> {
     DateTime? dueDate,
     int estimatedHours = 0,
     String? assigneeId,
+    bool sendNotification = true,
   }) async {
     try {
       final currentUserId = ref.read(currentUserIdProvider);
@@ -127,6 +129,19 @@ class TasksNotifier extends StateNotifier<AsyncValue<List<TaskModel>>> {
         await firestoreService.createTask(task);
       } catch (e) {
         print('Firestore save failed, saved locally only: $e');
+      }
+
+      // Отправляем уведомление
+      if (sendNotification) {
+        await notificationService.showNewTaskNotification(
+          taskTitle: title,
+          taskId: task.id,
+        );
+      }
+
+      // Планируем напоминание о дедлайне
+      if (dueDate != null) {
+        await scheduleDeadlineReminder(task);
       }
 
       // Обновляем состояние
@@ -296,5 +311,47 @@ class TasksNotifier extends StateNotifier<AsyncValue<List<TaskModel>>> {
       taskId,
       status: TaskStatus.todo,
     );
+  }
+
+  // Планирование напоминания о дедлайне
+  Future<void> scheduleDeadlineReminder(TaskModel task) async {
+    if (task.dueDate == null) return;
+
+    final now = DateTime.now();
+    final dueDate = task.dueDate!;
+
+    // Напоминание за 24 часа
+    if (dueDate.difference(now).inHours > 24) {
+      final reminder24h = dueDate.subtract(const Duration(hours: 24));
+      if (reminder24h.isAfter(now)) {
+        await notificationService.scheduleNotification(
+          id: '${task.id}_24h'.hashCode,
+          title: '🔔 Напоминание о задаче',
+          body: 'Задача "${task.title}" должна быть выполнена завтра',
+          scheduledDate: reminder24h,
+          payload: task.id,
+        );
+      }
+    }
+
+    // Напоминание за 1 час
+    if (dueDate.difference(now).inHours > 1) {
+      final reminder1h = dueDate.subtract(const Duration(hours: 1));
+      if (reminder1h.isAfter(now)) {
+        await notificationService.scheduleNotification(
+          id: '${task.id}_1h'.hashCode,
+          title: '⏰ Скоро дедлайн!',
+          body: 'Задача "${task.title}" должна быть выполнена через час',
+          scheduledDate: reminder1h,
+          payload: task.id,
+        );
+      }
+    }
+  }
+
+  // Отмена напоминаний о задаче
+  Future<void> cancelTaskReminders(String taskId) async {
+    await notificationService.cancelNotification('${taskId}_24h'.hashCode);
+    await notificationService.cancelNotification('${taskId}_1h'.hashCode);
   }
 }

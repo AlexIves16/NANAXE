@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'core/firebase_config.dart';
 import 'core/local_storage_service.dart';
+import 'core/notification_service.dart';
 import 'core/theme.dart';
 import 'core/router.dart';
 
@@ -17,6 +18,9 @@ void main() async {
 
   // Инициализация локального хранилища
   await localStorageService.initialize();
+
+  // Инициализация уведомлений
+  await notificationService.initialize();
 
   runApp(
     const ProviderScope(
