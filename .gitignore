@@ -2,6 +2,7 @@
 .env
 .env.local
 .env.*.local
+!/.env.example
 
 # Firebase (root level)
 /google-services.json

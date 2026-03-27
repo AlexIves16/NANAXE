@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'core/firebase_config.dart';
 import 'core/local_storage_service.dart';
 import 'core/theme.dart';
@@ -7,6 +8,9 @@ import 'core/router.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Загрузка переменных окружения
+  await dotenv.load(fileName: ".env");
 
   // Инициализация Firebase
   await FirebaseConfig.initialize();
@@ -16,13 +20,13 @@ void main() async {
 
   runApp(
     const ProviderScope(
-      child: NanahuiCrmApp(),
+      child: NanaxeCrmApp(),
     ),
   );
 }
 
-class NanahuiCrmApp extends StatelessWidget {
-  const NanahuiCrmApp({super.key});
+class NanaxeCrmApp extends StatelessWidget {
+  const NanaxeCrmApp({super.key});
 
   @override
   Widget build(BuildContext context) {

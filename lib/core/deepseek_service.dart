@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../models/task_model.dart';
 
 class DeepSeekService {
@@ -29,11 +30,13 @@ class DeepSeekService {
           'messages': [
             {
               'role': 'system',
-              'content': 'You are a task planning assistant. Break down tasks into logical subtasks. Return ONLY a JSON array.',
+              'content':
+                  'You are a task planning assistant. Break down tasks into logical subtasks. Return ONLY a JSON array.',
             },
             {
               'role': 'user',
-              'content': 'Break down this task into 3-7 subtasks:\n\nTitle: $title\nDescription: $description\n\nReturn ONLY a JSON array with format: [{"title": "...", "estimatedHours": 0, "description": "..."}]',
+              'content':
+                  'Break down this task into 3-7 subtasks:\n\nTitle: $title\nDescription: $description\n\nReturn ONLY a JSON array with format: [{"title": "...", "estimatedHours": 0, "description": "..."}]',
             },
           ],
           'temperature': 0.7,
@@ -44,7 +47,7 @@ class DeepSeekService {
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         final content = data['choices'][0]['message']['content'];
-        
+
         // Извлекаем JSON из ответа
         final jsonMatch = RegExp(r'\[.*\]', dotAll: true).firstMatch(content);
         if (jsonMatch != null) {
@@ -83,11 +86,13 @@ class DeepSeekService {
           'messages': [
             {
               'role': 'system',
-              'content': 'You are a task prioritization assistant. Determine task priority: low, medium, high, or urgent. Reply with ONE word only.',
+              'content':
+                  'You are a task prioritization assistant. Determine task priority: low, medium, high, or urgent. Reply with ONE word only.',
             },
             {
               'role': 'user',
-              'content': 'What priority should this task have?\n\nTitle: $title\nDescription: $description\nDue: ${dueDate ?? "Not specified"}\n\nReply with ONE word: low, medium, high, or urgent',
+              'content':
+                  'What priority should this task have?\n\nTitle: $title\nDescription: $description\nDue: ${dueDate ?? "Not specified"}\n\nReply with ONE word: low, medium, high, or urgent',
             },
           ],
           'temperature': 0.3,
@@ -97,13 +102,18 @@ class DeepSeekService {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        final content = data['choices'][0]['message']['content'].trim().toLowerCase();
-        
+        final content =
+            data['choices'][0]['message']['content'].trim().toLowerCase();
+
         switch (content) {
-          case 'urgent': return TaskPriority.urgent;
-          case 'high': return TaskPriority.high;
-          case 'low': return TaskPriority.low;
-          default: return TaskPriority.medium;
+          case 'urgent':
+            return TaskPriority.urgent;
+          case 'high':
+            return TaskPriority.high;
+          case 'low':
+            return TaskPriority.low;
+          default:
+            return TaskPriority.medium;
         }
       }
     } catch (e) {
@@ -134,11 +144,13 @@ class DeepSeekService {
           'messages': [
             {
               'role': 'system',
-              'content': 'You are a task description writer. Write clear, concise task descriptions in Russian. Keep it under 100 words.',
+              'content':
+                  'You are a task description writer. Write clear, concise task descriptions in Russian. Keep it under 100 words.',
             },
             {
               'role': 'user',
-              'content': 'Write a brief description for this task:\n\nTitle: $title\nContext: ${context ?? "No additional context"}\n\nWrite in Russian.',
+              'content':
+                  'Write a brief description for this task:\n\nTitle: $title\nContext: ${context ?? "No additional context"}\n\nWrite in Russian.',
             },
           ],
           'temperature': 0.5,
@@ -169,12 +181,14 @@ class DeepSeekService {
     }
 
     try {
-      final tasksJson = tasks.map((t) => {
-        'title': t.title,
-        'estimatedHours': t.estimatedHours,
-        'priority': t.priority.name,
-        'dueDate': t.dueDate?.toIso8601String(),
-      }).toList();
+      final tasksJson = tasks
+          .map((t) => {
+                'title': t.title,
+                'estimatedHours': t.estimatedHours,
+                'priority': t.priority.name,
+                'dueDate': t.dueDate?.toIso8601String(),
+              })
+          .toList();
 
       final response = await http.post(
         Uri.parse('$baseUrl/v1/chat/completions'),
@@ -187,7 +201,8 @@ class DeepSeekService {
           'messages': [
             {
               'role': 'system',
-              'content': 'You are a smart scheduling assistant. Distribute tasks across available days optimally. Return ONLY a JSON array.',
+              'content':
+                  'You are a smart scheduling assistant. Distribute tasks across available days optimally. Return ONLY a JSON array.',
             },
             {
               'role': 'user',
@@ -211,7 +226,7 @@ Return JSON array: [{"taskId": index, "date": "YYYY-MM-DD", "hours": 0}]
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         final content = data['choices'][0]['message']['content'];
-        
+
         final jsonMatch = RegExp(r'\[.*\]', dotAll: true).firstMatch(content);
         if (jsonMatch != null) {
           final List<dynamic> schedule = jsonDecode(jsonMatch.group(0)!);
@@ -252,7 +267,8 @@ Return JSON array: [{"taskId": index, "date": "YYYY-MM-DD", "hours": 0}]
           'messages': [
             {
               'role': 'system',
-              'content': 'You are a project structure assistant. Create a mind-map structure for projects. Return ONLY a JSON array of nodes.',
+              'content':
+                  'You are a project structure assistant. Create a mind-map structure for projects. Return ONLY a JSON array of nodes.',
             },
             {
               'role': 'user',
@@ -275,7 +291,7 @@ Return JSON array of nodes with format:
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         final content = data['choices'][0]['message']['content'];
-        
+
         final jsonMatch = RegExp(r'\[.*\]', dotAll: true).firstMatch(content);
         if (jsonMatch != null) {
           final List<dynamic> nodes = jsonDecode(jsonMatch.group(0)!);
@@ -290,21 +306,42 @@ Return JSON array of nodes with format:
   }
 
   // Mock данные для тестирования
-  List<Map<String, dynamic>> _mockGenerateSubtasks(String title, String description) {
+  List<Map<String, dynamic>> _mockGenerateSubtasks(
+      String title, String description) {
     return [
-      {'title': 'Анализ требований', 'estimatedHours': 2, 'description': 'Изучить требования и документацию'},
-      {'title': 'Проектирование', 'estimatedHours': 3, 'description': 'Спроектировать архитектуру решения'},
-      {'title': 'Реализация', 'estimatedHours': 8, 'description': 'Написать код'},
-      {'title': 'Тестирование', 'estimatedHours': 3, 'description': 'Протестировать функциональность'},
-      {'title': 'Документирование', 'estimatedHours': 2, 'description': 'Создать документацию'},
+      {
+        'title': 'Анализ требований',
+        'estimatedHours': 2,
+        'description': 'Изучить требования и документацию'
+      },
+      {
+        'title': 'Проектирование',
+        'estimatedHours': 3,
+        'description': 'Спроектировать архитектуру решения'
+      },
+      {
+        'title': 'Реализация',
+        'estimatedHours': 8,
+        'description': 'Написать код'
+      },
+      {
+        'title': 'Тестирование',
+        'estimatedHours': 3,
+        'description': 'Протестировать функциональность'
+      },
+      {
+        'title': 'Документирование',
+        'estimatedHours': 2,
+        'description': 'Создать документацию'
+      },
     ];
   }
 
   TaskPriority _mockPrioritizeTask(DateTime? dueDate) {
     if (dueDate == null) return TaskPriority.medium;
-    
+
     final daysUntilDue = dueDate.difference(DateTime.now()).inDays;
-    
+
     if (daysUntilDue <= 1) return TaskPriority.urgent;
     if (daysUntilDue <= 3) return TaskPriority.high;
     if (daysUntilDue <= 7) return TaskPriority.medium;
@@ -335,14 +372,14 @@ Return JSON array of nodes with format:
       } else {
         currentDate = currentDate.add(const Duration(days: 1));
         remainingHours = availableHoursPerDay;
-        
+
         if (currentDate.isAfter(endDate)) break;
-        
+
         schedule.add({
           'taskId': i,
           'date': currentDate,
-          'hours': task.estimatedHours > remainingHours 
-              ? remainingHours 
+          'hours': task.estimatedHours > remainingHours
+              ? remainingHours
               : task.estimatedHours,
         });
       }
@@ -370,6 +407,6 @@ Return JSON array of nodes with format:
 
 // Глобальный экземпляр сервиса
 final deepSeekService = DeepSeekService(
-  // API ключ можно получить на https://platform.deepseek.com
-  apiKey: null, // Добавить ключ здесь или через .env
+  // API ключ из .env файла
+  apiKey: dotenv.env['DEEPSEEK_API_KEY'],
 );
