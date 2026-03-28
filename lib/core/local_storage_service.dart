@@ -29,12 +29,12 @@ class LocalStorageService {
 
   // Tasks
   Future<void> saveTask(TaskModel task) async {
-    await _tasksBox.put(task.id, task.toFirestore());
+    await _tasksBox.put(task.id, task.toMap()); // Используем toMap() для Hive
   }
 
   Future<void> saveTasks(List<TaskModel> tasks) async {
     for (final task in tasks) {
-      await _tasksBox.put(task.id, task.toFirestore());
+      await _tasksBox.put(task.id, task.toMap());
     }
   }
 
@@ -121,7 +121,7 @@ class LocalStorageService {
 
     // Merge: remote takes precedence
     final merged = {...localMap, ...remoteMap};
-    
+
     await _tasksBox.clear();
     for (final task in merged.values) {
       await _tasksBox.put(task.id, task.toFirestore());

@@ -103,8 +103,12 @@ class TaskModel {
 
   factory TaskModel.fromFirestore(DocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>;
+    return TaskModel.fromMap(data);
+  }
+
+  factory TaskModel.fromMap(Map<String, dynamic> data) {
     return TaskModel(
-      id: doc.id,
+      id: data['id'] ?? '',
       title: data['title'] ?? '',
       description: data['description'],
       projectId: data['projectId'] ?? '',
@@ -121,13 +125,19 @@ class TaskModel {
       creatorId: data['creatorId'],
       tags: List<String>.from(data['tags'] ?? []),
       dueDate: data['dueDate'] != null
-          ? (data['dueDate'] as Timestamp).toDate()
+          ? (data['dueDate'] is Timestamp
+              ? (data['dueDate'] as Timestamp).toDate()
+              : DateTime.parse(data['dueDate']))
           : null,
       startDate: data['startDate'] != null
-          ? (data['startDate'] as Timestamp).toDate()
+          ? (data['startDate'] is Timestamp
+              ? (data['startDate'] as Timestamp).toDate()
+              : DateTime.parse(data['startDate']))
           : null,
       completedDate: data['completedDate'] != null
-          ? (data['completedDate'] as Timestamp).toDate()
+          ? (data['completedDate'] is Timestamp
+              ? (data['completedDate'] as Timestamp).toDate()
+              : DateTime.parse(data['completedDate']))
           : null,
       alarms: (data['alarms'] as List<dynamic>?)
               ?.map((a) => AlarmData.fromMap(a as Map<String, dynamic>))
@@ -136,8 +146,12 @@ class TaskModel {
       estimatedHours: data['estimatedHours'] ?? 0,
       spentHours: data['spentHours'] ?? 0,
       aiMetadata: data['aiMetadata'] ?? {},
-      createdAt: (data['createdAt'] as Timestamp).toDate(),
-      updatedAt: (data['updatedAt'] as Timestamp).toDate(),
+      createdAt: data['createdAt'] is Timestamp
+          ? (data['createdAt'] as Timestamp).toDate()
+          : DateTime.parse(data['createdAt']),
+      updatedAt: data['updatedAt'] is Timestamp
+          ? (data['updatedAt'] as Timestamp).toDate()
+          : DateTime.parse(data['updatedAt']),
     );
   }
 
@@ -162,6 +176,31 @@ class TaskModel {
       'aiMetadata': aiMetadata,
       'createdAt': Timestamp.fromDate(createdAt),
       'updatedAt': Timestamp.fromDate(updatedAt),
+    };
+  }
+
+  // Для сохранения в Hive (конвертируем Timestamp в строки)
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'title': title,
+      'description': description,
+      'projectId': projectId,
+      'parentTaskId': parentTaskId,
+      'status': status.name,
+      'priority': priority.name,
+      'assigneeId': assigneeId,
+      'creatorId': creatorId,
+      'tags': tags,
+      'dueDate': dueDate?.toIso8601String(),
+      'startDate': startDate?.toIso8601String(),
+      'completedDate': completedDate?.toIso8601String(),
+      'alarms': alarms.map((a) => a.toMap()).toList(),
+      'estimatedHours': estimatedHours,
+      'spentHours': spentHours,
+      'aiMetadata': aiMetadata,
+      'createdAt': createdAt.toIso8601String(),
+      'updatedAt': updatedAt.toIso8601String(),
     };
   }
 
