@@ -21,7 +21,9 @@ class AlarmData {
   factory AlarmData.fromMap(Map<String, dynamic> map) {
     return AlarmData(
       id: map['id'] ?? '',
-      dateTime: (map['dateTime'] as Timestamp).toDate(),
+      dateTime: map['dateTime'] is Timestamp
+          ? (map['dateTime'] as Timestamp).toDate()
+          : DateTime.parse(map['dateTime'] as String),
       isRepeating: map['isRepeating'] ?? false,
       repeatPattern: map['repeatPattern'] ?? 'daily',
       repeatDays: List<int>.from(map['repeatDays'] ?? []),
@@ -32,7 +34,7 @@ class AlarmData {
   Map<String, dynamic> toMap() {
     return {
       'id': id,
-      'dateTime': Timestamp.fromDate(dateTime),
+      'dateTime': dateTime.toIso8601String(), // Сохраняем как строку для Hive
       'isRepeating': isRepeating,
       'repeatPattern': repeatPattern,
       'repeatDays': repeatDays,
