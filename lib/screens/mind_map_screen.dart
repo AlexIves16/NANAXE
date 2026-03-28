@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/mindmap_provider.dart';
+import '../models/mind_map_model.dart';
 
 class MindMapScreen extends ConsumerStatefulWidget {
   const MindMapScreen({super.key});
