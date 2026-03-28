@@ -102,10 +102,10 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
 
     try {
       // TODO: Реальная синхронизация с Google Calendar
-      await googleCalendarService.getEvents(
-        timeMin: DateTime(_focusedDay.year, _focusedDay.month, 1),
-        timeMax: DateTime(_focusedDay.year, _focusedDay.month + 1, 0, 23, 59),
-      );
+      // await googleCalendarService.getEvents(
+      //   timeMin: DateTime(_focusedDay.year, _focusedDay.month, 1),
+      //   timeMax: DateTime(_focusedDay.year, _focusedDay.month + 1, 0, 23, 59),
+      // );
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

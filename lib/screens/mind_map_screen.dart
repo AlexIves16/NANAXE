@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:graphview/graphview.dart';
 import '../providers/mindmap_provider.dart';
-import '../models/mind_map_model.dart';
 
 class MindMapScreen extends ConsumerStatefulWidget {
   const MindMapScreen({super.key});
@@ -12,8 +10,6 @@ class MindMapScreen extends ConsumerStatefulWidget {
 }
 
 class _MindMapScreenState extends ConsumerState<MindMapScreen> {
-  final Graph graph = Graph();
-  final SugiyamaConfiguration config = SugiyamaConfiguration();
   bool _isEditing = false;
   bool _isGenerating = false;
 
@@ -53,7 +49,7 @@ class _MindMapScreenState extends ConsumerState<MindMapScreen> {
             return _buildEmptyState(context, projectId);
           }
 
-          return _buildMindMap(mindMapData);
+          return _buildSimpleMindMap(mindMapData);
         },
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, stack) => Center(
@@ -79,6 +75,64 @@ class _MindMapScreenState extends ConsumerState<MindMapScreen> {
               label: const Text('Добавить узел'),
             )
           : null,
+    );
+  }
+
+  // Простое отображение дерева (замена GraphView)
+  Widget _buildSimpleMindMap(MindMapData mindMapData) {
+    return ListView.builder(
+      padding: const EdgeInsets.all(16),
+      itemCount: mindMapData.nodes.length,
+      itemBuilder: (context, index) {
+        final node = mindMapData.nodes[index];
+        return _buildTreeNodeWidget(node, mindMapData);
+      },
+    );
+  }
+
+  Widget _buildTreeNodeWidget(MindMapNode node, MindMapData mindMapData) {
+    final children = mindMapData.getChildren(node.id);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          margin: EdgeInsets.only(left: node.level * 20.0),
+          decoration: BoxDecoration(
+            color: _hexToColor(node.color),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Row(
+            children: [
+              Icon(
+                _getIconData(node.icon),
+                color: Colors.white,
+                size: 20,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  node.title,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              if (_isEditing)
+                IconButton(
+                  icon: const Icon(Icons.delete, color: Colors.white),
+                  onPressed: () => _confirmDeleteNode(node),
+                ),
+            ],
+          ),
+        ),
+        if (children.isNotEmpty) ...[
+          const SizedBox(height: 8),
+          ...children.map((child) => _buildTreeNodeWidget(child, mindMapData)),
+        ],
+      ],
     );
   }
 
@@ -131,122 +185,12 @@ class _MindMapScreenState extends ConsumerState<MindMapScreen> {
     );
   }
 
-  Widget _buildMindMap(MindMapData mindMapData) {
-    // Строим граф из узлов
-    graph.clear();
-
-    final nodesMap = <String, Node>{};
-
-    // Создаём узлы графа
-    for (final node in mindMapData.nodes) {
-      final graphNode = Node.Id(node.id);
-      nodesMap[node.id] = graphNode;
-      graph.addNode(graphNode);
-    }
-
-    // Создаём связи
-    for (final node in mindMapData.nodes) {
-      if (node.parentId != null && nodesMap.containsKey(node.parentId)) {
-        graph.addEdge(nodesMap[node.parentId]!, nodesMap[node.id]!);
-      }
-    }
-
-    // Настройка визуализации
-    config.orientation = SugiyamaConfiguration.ORIENTATION_LEFT_RIGHT;
-    config.nodeSeparation = 40;
-    config.levelSeparation = 60;
-    config.backgroundColor = Colors.transparent;
-
-    // Настройка узлов
-    config.builder = (Node node) {
-      final mindMapNode = mindMapData.nodes.firstWhere(
-        (n) => n.id == node.key,
-        orElse: () => throw Exception('Node not found'),
-      );
-
-      return _buildNodeWidget(mindMapNode);
-    };
-
-    return InteractiveViewer(
-      panEnabled: true,
-      scaleEnabled: true,
-      child: SizedBox(
-        width: double.maxFinite,
-        height: double.maxFinite,
-        child: SugiyamaAlgorithm(graph, config),
-      ),
-    );
-  }
-
-  Widget _buildNodeWidget(MindMapNode node) {
-    return GestureDetector(
-      onTap: () => _showNodeOptionsDialog(node),
-      onDoubleTap: () => _isEditing ? _showEditNodeDialog(node) : null,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        decoration: BoxDecoration(
-          color: _hexToColor(node.color),
-          borderRadius: BorderRadius.circular(12),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.2),
-              blurRadius: 4,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  _getIconData(node.icon),
-                  color: Colors.white,
-                  size: 20,
-                ),
-                const SizedBox(width: 8),
-                Flexible(
-                  child: Text(
-                    node.title,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                    ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-              ],
-            ),
-            if (node.taskId != null) ...[
-              const SizedBox(height: 4),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.3),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: const Text(
-                  '📋 Задача',
-                  style: TextStyle(color: Colors.white, fontSize: 10),
-                ),
-              ),
-            ],
-          ],
-        ),
-      ),
-    );
-  }
-
   Future<void> _generateWithAI(String projectId) async {
     setState(() {
       _isGenerating = true;
     });
 
     try {
-      // Показываем диалог для ввода данных проекта
       final projectName = await _showProjectNameDialog();
       if (projectName == null || projectName.isEmpty) return;
 
@@ -374,73 +318,6 @@ class _MindMapScreenState extends ConsumerState<MindMapScreen> {
             child: const Text('Добавить'),
           ),
         ],
-      ),
-    );
-  }
-
-  void _showEditNodeDialog(MindMapNode node) {
-    final titleController = TextEditingController(text: node.title);
-
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Редактировать узел'),
-        content: TextField(
-          controller: titleController,
-          decoration: const InputDecoration(
-            labelText: 'Название',
-            border: OutlineInputBorder(),
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Отмена'),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              // TODO: Обновить узел
-              Navigator.pop(context);
-            },
-            child: const Text('Сохранить'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showNodeOptionsDialog(MindMapNode node) {
-    showModalBottomSheet(
-      context: context,
-      builder: (context) => SafeArea(
-        child: Wrap(
-          children: [
-            ListTile(
-              leading: const Icon(Icons.edit),
-              title: const Text('Редактировать'),
-              onTap: () {
-                Navigator.pop(context);
-                _showEditNodeDialog(node);
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.link),
-              title: const Text('Привязать задачу'),
-              onTap: () {
-                Navigator.pop(context);
-                // TODO: Выбрать задачу
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.delete, color: Colors.red),
-              title: const Text('Удалить', style: TextStyle(color: Colors.red)),
-              onTap: () {
-                Navigator.pop(context);
-                _confirmDeleteNode(node);
-              },
-            ),
-          ],
-        ),
       ),
     );
   }

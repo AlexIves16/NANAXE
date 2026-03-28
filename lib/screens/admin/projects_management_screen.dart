@@ -208,7 +208,7 @@ class _ProjectsManagementScreenState
                     child: Center(
                       child: Column(
                         children: [
-                          const Icon(Icons.folder_outline,
+                          const Icon(Icons.folder_open,
                               size: 48, color: Colors.grey),
                           const SizedBox(height: 16),
                           const Text(
