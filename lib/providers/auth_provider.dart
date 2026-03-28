@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/user_model.dart';
+import '../core/router.dart';
 
 class AuthNotifier extends StateNotifier<AsyncValue<UserModel?>> {
   final FirebaseAuth _auth;
@@ -13,6 +14,7 @@ class AuthNotifier extends StateNotifier<AsyncValue<UserModel?>> {
       : super(const AsyncValue.data(null)) {
     // Слушаем изменения состояния аутентификации
     _auth.authStateChanges().listen((user) async {
+      print('Auth state changed: ${user?.email}');
       if (user != null) {
         // Загружаем или создаём пользователя в Firestore
         try {
@@ -82,8 +84,20 @@ class AuthNotifier extends StateNotifier<AsyncValue<UserModel?>> {
 
       final userCredential = await _auth.signInWithCredential(credential);
 
-      // Пользователь будет загружен через authStateChanges listener
+      // Обновляем состояние роутера
+      GoRouterRefreshNotifier.setAuthenticated(true);
       print('Signed in: ${userCredential.user?.email}');
+      // Пользователь будет загружен через authStateChanges listener
+
+      // Обновляем provider для notifyListeners
+      state = AsyncValue.data(UserModel(
+        id: userCredential.user!.uid,
+        email: userCredential.user!.email ?? '',
+        displayName: userCredential.user!.displayName,
+        photoUrl: userCredential.user!.photoURL,
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      ));
     } catch (e, st) {
       print('Google Sign-In Error: $e');
       state = AsyncValue.error(e, st);
@@ -94,6 +108,10 @@ class AuthNotifier extends StateNotifier<AsyncValue<UserModel?>> {
     try {
       await _googleSignIn.signOut();
       await _auth.signOut();
+
+      // Обновляем состояние роутера
+      GoRouterRefreshNotifier.setAuthenticated(false);
+
       state = const AsyncValue.data(null);
     } catch (e, st) {
       state = AsyncValue.error(e, st);

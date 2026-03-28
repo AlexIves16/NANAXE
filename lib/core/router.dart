@@ -113,10 +113,12 @@ class AppRouter {
       final isLoggedIn = GoRouterRefreshNotifier.isAuthenticated;
       final isLoggingIn = state.matchedLocation == '/auth';
 
+      // Если не авторизован и не на экране входа - redirect на auth
       if (!isLoggedIn && !isLoggingIn) {
         return '/auth';
       }
 
+      // Если авторизован и на экране входа - redirect на home
       if (isLoggedIn && isLoggingIn) {
         return '/home';
       }
@@ -133,15 +135,28 @@ class GoRouterRefreshNotifier extends ChangeNotifier {
   GoRouterRefreshNotifier() {
     // Подписка на изменения аутентификации будет добавлена через provider
   }
+
+  static void setAuthenticated(bool value) {
+    isAuthenticated = value;
+    // Роутер обновится автоматически через refreshListenable
+    // notifyListeners вызывается через provider
+  }
+
+  @override
+  void notifyListeners() {
+    super.notifyListeners();
+  }
 }
 
 // Provider для обновления роутера при изменении аутентификации
 final routerRefreshProvider = ChangeNotifierProvider((ref) {
   final auth = ref.watch(authProvider);
+  final notifier = GoRouterRefreshNotifier();
 
   auth.whenData((user) {
     GoRouterRefreshNotifier.isAuthenticated = user != null;
+    notifier.notifyListeners();
   });
 
-  return GoRouterRefreshNotifier();
+  return notifier;
 });
