@@ -1,5 +1,46 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+// Данные будильника
+class AlarmData {
+  final String id;
+  final DateTime dateTime;
+  final bool isRepeating;
+  final String repeatPattern;
+  final List<int> repeatDays;
+  final bool isEnabled;
+
+  AlarmData({
+    required this.id,
+    required this.dateTime,
+    this.isRepeating = false,
+    this.repeatPattern = 'daily',
+    this.repeatDays = const [],
+    this.isEnabled = true,
+  });
+
+  factory AlarmData.fromMap(Map<String, dynamic> map) {
+    return AlarmData(
+      id: map['id'] ?? '',
+      dateTime: (map['dateTime'] as Timestamp).toDate(),
+      isRepeating: map['isRepeating'] ?? false,
+      repeatPattern: map['repeatPattern'] ?? 'daily',
+      repeatDays: List<int>.from(map['repeatDays'] ?? []),
+      isEnabled: map['isEnabled'] ?? true,
+    );
+  }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'dateTime': Timestamp.fromDate(dateTime),
+      'isRepeating': isRepeating,
+      'repeatPattern': repeatPattern,
+      'repeatDays': repeatDays,
+      'isEnabled': isEnabled,
+    };
+  }
+}
+
 enum TaskStatus {
   todo,
   inProgress,
@@ -29,6 +70,7 @@ class TaskModel {
   final DateTime? dueDate;
   final DateTime? startDate;
   final DateTime? completedDate;
+  final List<AlarmData> alarms; // Будильники для задачи
   final int estimatedHours;
   final int spentHours;
   final Map<String, dynamic> aiMetadata; // AI-generated suggestions
@@ -49,6 +91,7 @@ class TaskModel {
     this.dueDate,
     this.startDate,
     this.completedDate,
+    this.alarms = const [],
     this.estimatedHours = 0,
     this.spentHours = 0,
     this.aiMetadata = const {},
@@ -75,15 +118,19 @@ class TaskModel {
       assigneeId: data['assigneeId'],
       creatorId: data['creatorId'],
       tags: List<String>.from(data['tags'] ?? []),
-      dueDate: data['dueDate'] != null 
-          ? (data['dueDate'] as Timestamp).toDate() 
+      dueDate: data['dueDate'] != null
+          ? (data['dueDate'] as Timestamp).toDate()
           : null,
-      startDate: data['startDate'] != null 
-          ? (data['startDate'] as Timestamp).toDate() 
+      startDate: data['startDate'] != null
+          ? (data['startDate'] as Timestamp).toDate()
           : null,
-      completedDate: data['completedDate'] != null 
-          ? (data['completedDate'] as Timestamp).toDate() 
+      completedDate: data['completedDate'] != null
+          ? (data['completedDate'] as Timestamp).toDate()
           : null,
+      alarms: (data['alarms'] as List<dynamic>?)
+              ?.map((a) => AlarmData.fromMap(a as Map<String, dynamic>))
+              .toList() ??
+          [],
       estimatedHours: data['estimatedHours'] ?? 0,
       spentHours: data['spentHours'] ?? 0,
       aiMetadata: data['aiMetadata'] ?? {},
@@ -105,9 +152,9 @@ class TaskModel {
       'tags': tags,
       'dueDate': dueDate != null ? Timestamp.fromDate(dueDate!) : null,
       'startDate': startDate != null ? Timestamp.fromDate(startDate!) : null,
-      'completedDate': completedDate != null 
-          ? Timestamp.fromDate(completedDate!) 
-          : null,
+      'completedDate':
+          completedDate != null ? Timestamp.fromDate(completedDate!) : null,
+      'alarms': alarms.map((a) => a.toMap()).toList(),
       'estimatedHours': estimatedHours,
       'spentHours': spentHours,
       'aiMetadata': aiMetadata,
@@ -130,6 +177,7 @@ class TaskModel {
     DateTime? dueDate,
     DateTime? startDate,
     DateTime? completedDate,
+    List<AlarmData>? alarms,
     int? estimatedHours,
     int? spentHours,
     Map<String, dynamic>? aiMetadata,
@@ -150,6 +198,7 @@ class TaskModel {
       dueDate: dueDate ?? this.dueDate,
       startDate: startDate ?? this.startDate,
       completedDate: completedDate ?? this.completedDate,
+      alarms: alarms ?? this.alarms,
       estimatedHours: estimatedHours ?? this.estimatedHours,
       spentHours: spentHours ?? this.spentHours,
       aiMetadata: aiMetadata ?? this.aiMetadata,

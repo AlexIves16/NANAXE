@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../providers/auth_provider.dart';
 
 class DashboardScreen extends StatelessWidget {
   const DashboardScreen({super.key});
@@ -10,10 +12,20 @@ class DashboardScreen extends StatelessWidget {
       appBar: AppBar(
         title: const Text('NANAXE CRM'),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.admin_panel_settings),
-            onPressed: () => context.push('/home/admin'),
-            tooltip: 'Админка',
+          Consumer(
+            builder: (context, ref, _) {
+              final user = ref.watch(currentUserProvider);
+              final isAdmin = user?.role == UserRole.admin;
+
+              if (isAdmin ?? false) {
+                return IconButton(
+                  icon: const Icon(Icons.admin_panel_settings),
+                  onPressed: () => context.push('/home/admin'),
+                  tooltip: 'Админка',
+                );
+              }
+              return const SizedBox.shrink();
+            },
           ),
           IconButton(
             icon: const Icon(Icons.auto_awesome),

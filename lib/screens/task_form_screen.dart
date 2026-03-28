@@ -26,6 +26,7 @@ class _TaskFormScreenState extends ConsumerState<TaskFormScreen> {
   TaskPriority _priority = TaskPriority.medium;
   DateTime? _dueDate;
   int _estimatedHours = 0;
+  List<AlarmData> _alarms = [];
   bool _isGenerating = false;
 
   @override

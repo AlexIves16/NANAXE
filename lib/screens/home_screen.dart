@@ -20,7 +20,6 @@ class _HomeScreenState extends State<HomeScreen> {
     const TasksScreen(),
     const MindMapScreen(),
     const CalendarScreen(),
-    const AlarmsScreen(),
   ];
 
   @override
@@ -54,11 +53,6 @@ class _HomeScreenState extends State<HomeScreen> {
             icon: Icon(Icons.calendar_today_outlined),
             selectedIcon: Icon(Icons.calendar_today),
             label: 'Календарь',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.alarm_outlined),
-            selectedIcon: Icon(Icons.alarm),
-            label: 'Будильники',
           ),
         ],
       ),

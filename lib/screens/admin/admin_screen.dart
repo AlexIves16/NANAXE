@@ -10,7 +10,7 @@ class AdminScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final user = ref.watch(currentUserProvider);
-    final isAdmin = user?.isAdmin ?? false;
+    final isAdmin = user?.role == UserRole.admin;
 
     return Scaffold(
       appBar: AppBar(
